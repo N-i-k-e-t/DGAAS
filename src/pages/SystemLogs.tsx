@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db/database';
-import { Terminal, Cpu, Database, Wifi, Shield, RefreshCw, Trash2, Download, Search } from 'lucide-react';
+import { Terminal, Cpu, Database, Wifi, Shield, RefreshCw, Search } from 'lucide-react';
 
 const StatusCard = ({ title, value, status, icon: Icon }: any) => (
   <div className="card flex items-center space-x-4">

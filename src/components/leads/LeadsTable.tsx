@@ -1,7 +1,6 @@
-import React from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../../db/database';
-import { Filter, Search, Download, Plus, Mail, Phone, MapPin, Star } from 'lucide-react';
+import { Search, Download, Plus } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 

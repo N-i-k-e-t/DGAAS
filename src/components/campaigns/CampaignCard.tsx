@@ -1,6 +1,4 @@
-import React from 'react';
-import { Power, Clock, Play, Edit2, AlertCircle, Mail, MessageSquare } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Clock, Play, Edit2, AlertCircle, Mail, MessageSquare } from 'lucide-react';
 
 export const CampaignCard = ({ campaign, onToggle, onEdit, onTrigger }: any) => {
   const getStatusColor = () => {

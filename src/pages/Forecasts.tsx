@@ -1,6 +1,5 @@
-import React from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
-import { Calendar, TrendingUp, Info, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
+import { Calendar, TrendingUp, Info, CheckCircle2 } from 'lucide-react';
 
 const data = [
   { name: 'Week 1', demand: 2 },

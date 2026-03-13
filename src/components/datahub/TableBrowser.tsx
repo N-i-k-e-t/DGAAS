@@ -1,13 +1,11 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../../db/database';
 import { 
-  Database, 
   Search, 
   Download, 
   Upload, 
   Table as TableIcon,
-  ChevronRight,
   Filter
 } from 'lucide-react';
 import { CsvImporter } from './CsvImporter';
@@ -45,7 +43,6 @@ const categories = [
 
 export const TableBrowser = () => {
   const [selectedTable, setSelectedTable] = useState<string>('travel_agents');
-  const [searchTerm, setSearchTerm] = useState('');
   const [isImporterOpen, setIsImporterOpen] = useState(false);
 
   // Dynamic table data fetching
@@ -152,7 +149,7 @@ export const TableBrowser = () => {
                     </td>
                   </tr>
                 ) : (
-                  tableData.map((row: any, i) => (
+                  tableData.map((row: any, i: number) => (
                     <tr key={i} className="hover:bg-white/[0.02]">
                       {columns.map(col => (
                         <td key={col} className="px-4 py-3 border-r border-white/5 last:border-0">{row[col]}</td>

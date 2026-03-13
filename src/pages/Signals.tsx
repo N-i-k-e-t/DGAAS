@@ -1,4 +1,3 @@
-import React from 'react';
 import { SignalsTable } from '../components/signals/SignalsTable';
 import { Radar, PieChart, TrendingUp, AlertCircle } from 'lucide-react';
 

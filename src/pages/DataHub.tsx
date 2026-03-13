@@ -1,6 +1,5 @@
-import React from 'react';
 import { TableBrowser } from '../components/datahub/TableBrowser';
-import { Database, ShieldCheck, Zap } from 'lucide-react';
+import { ShieldCheck, Zap } from 'lucide-react';
 
 export default function DataHub() {
   return (

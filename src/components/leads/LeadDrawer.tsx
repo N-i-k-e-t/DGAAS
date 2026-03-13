@@ -1,5 +1,4 @@
-import React from 'react';
-import { X, Mail, Phone, MapPin, Copy, Send, CheckCircle2, History, MessageSquare, Star } from 'lucide-react';
+import { X, Mail, Phone, MapPin, Copy, Send, History, MessageSquare, Star } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const LeadDrawer = ({ lead, isOpen, onClose }: { lead: any; isOpen: boolean; onClose: () => void }) => {

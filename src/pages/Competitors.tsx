@@ -1,7 +1,6 @@
-import React from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db/database';
-import { Swords, ExternalLink, Users, TrendingDown, TrendingUp, DollarSign } from 'lucide-react';
+import { Swords, ExternalLink, DollarSign } from 'lucide-react';
 
 export default function Competitors() {
   const competitors = useLiveQuery(() => db.competitors.toArray()) || [];

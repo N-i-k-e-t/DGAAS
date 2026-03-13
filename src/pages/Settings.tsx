@@ -1,13 +1,10 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { 
-  Settings as SettingsIcon, 
   Server, 
   Key, 
   Webhook, 
   Database, 
   Save, 
-  CheckCircle2, 
-  AlertTriangle,
   RefreshCw,
   Trash2,
   FileJson

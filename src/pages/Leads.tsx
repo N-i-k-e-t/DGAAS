@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { LeadsTable } from '../components/leads/LeadsTable';
 import { LeadDrawer } from '../components/leads/LeadDrawer';
-import { Users, UserPlus, Heart, Zap } from 'lucide-react';
+import { Users, Heart, Zap } from 'lucide-react';
 
 export default function Leads() {
   const [selectedLead, setSelectedLead] = useState<any>(null);

@@ -1,8 +1,7 @@
-import React from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db/database';
 import { CampaignCard } from '../components/campaigns/CampaignCard';
-import { Megaphone, Plus, Search, Activity } from 'lucide-react';
+import { Plus, Search, Activity } from 'lucide-react';
 
 export default function Campaigns() {
   const campaigns = useLiveQuery(() => db.campaigns.toArray()) || [];

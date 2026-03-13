@@ -1,7 +1,6 @@
-import React from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../../db/database';
-import { Calendar, Filter, Download, MoreHorizontal, AlertTriangle, Cloud, Wind, TrendingUp, Users } from 'lucide-react';
+import { Calendar, Filter, Download, MoreHorizontal, AlertTriangle, Cloud, Wind, TrendingUp } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
