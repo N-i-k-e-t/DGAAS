@@ -1,4 +1,3 @@
-import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { 
   LayoutDashboard, 
@@ -39,7 +38,7 @@ interface SidebarProps {
   setIsCollapsed: (collapsed: boolean) => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed }) => {
+export const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
 
   return (
     <aside 
