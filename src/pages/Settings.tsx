@@ -98,13 +98,13 @@ export default function Settings() {
           {activeTab === 'api' && (
             <ConfigSection title="External API Keys" icon={Key}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <InputField label="n8n Base URL" value={import.meta.env.VITE_N8N_BASE_URL || 'https://n8n.vayavia.com'} />
+                <InputField label="Campaign Webhook" value={import.meta.env.VITE_N8N_CAMPAIGN_WEBHOOK || '/webhook/campaign'} />
+                <InputField label="Leads Webhook" value={import.meta.env.VITE_N8N_LEADS_WEBHOOK || '/webhook/leads'} />
                 <InputField label="OpenWeatherMap Key" value="ow_742...912" />
                 <InputField label="IQAir API Key" value="iq_104...482" />
-                <InputField label="SerpApi Key" value="sa_002...115" />
-                <InputField label="Clay API Key" value="cl_882...104" />
-                <InputField label="Google Analytics ID" value="G-4R92..." />
               </div>
-              <p className="text-[10px] text-text-secondary italic">Keys are encrypted and stored in your browser's localStorage.</p>
+              <p className="text-[10px] text-text-secondary italic mt-4">API endpoints and keys are managed via Vercel Environment Variables.</p>
             </ConfigSection>
           )}
 

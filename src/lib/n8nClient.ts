@@ -63,3 +63,24 @@ export const triggerWorkflow = async (workflow: string, payload: any = {}): Prom
     };
   }
 };
+
+/**
+ * Spec compliant helper to fire a campaign scenario
+ */
+export const fireCampaign = (scenarioId: string) => {
+  return triggerWorkflow('campaign', { 
+    scenarioId, 
+    webhook_url: import.meta.env.VITE_N8N_CAMPAIGN_WEBHOOK 
+  });
+};
+
+/**
+ * Spec compliant helper to push lead feedback
+ */
+export const pushLeadFeedback = (leadId: string, status: 'good' | 'irrelevant') => {
+  return triggerWorkflow('lead-feedback', { 
+    leadId, 
+    status,
+    webhook_url: import.meta.env.VITE_N8N_LEADS_WEBHOOK 
+  });
+};

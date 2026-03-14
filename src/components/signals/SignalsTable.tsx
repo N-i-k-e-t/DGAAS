@@ -1,6 +1,8 @@
+import React, { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../../db/database';
-import { Calendar, Filter, Download, MoreHorizontal, AlertTriangle, Cloud, Wind, TrendingUp } from 'lucide-react';
+import { Calendar, Filter, Download, ChevronDown, ChevronUp, AlertTriangle, Cloud, Wind, TrendingUp, Cpu, Database } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -30,6 +32,7 @@ const SignalIcon = ({ type }: { type: string }) => {
 };
 
 export const SignalsTable = () => {
+  const [expandedId, setExpandedId] = useState<number | null>(null);
   const signals = useLiveQuery(() => db.demand_signals.reverse().toArray()) || [];
 
   return (
@@ -62,7 +65,7 @@ export const SignalsTable = () => {
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full text-left text-sm">
+        <table className="w-full text-left text-sm border-separate border-spacing-0">
           <thead className="text-xs text-text-secondary uppercase bg-white/[0.01]">
             <tr>
               <th className="px-6 py-3 font-medium">Timestamp</th>
@@ -71,7 +74,7 @@ export const SignalsTable = () => {
               <th className="px-6 py-3 font-medium">Urgency</th>
               <th className="px-6 py-3 font-medium">Target Segment</th>
               <th className="px-6 py-3 font-medium">Triggered</th>
-              <th className="px-6 py-3 font-medium"></th>
+              <th className="px-6 py-3 font-medium w-10"></th>
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5">
@@ -83,36 +86,82 @@ export const SignalsTable = () => {
               </tr>
             ) : (
               signals.map((signal) => (
-                <tr key={signal.id} className="hover:bg-white/[0.02] transition-colors group cursor-pointer">
-                  <td className="px-6 py-4 text-xs font-mono">{signal.timestamp}</td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center space-x-2">
-                      <SignalIcon type={signal.signal_type} />
-                      <span className="font-medium">{signal.signal_type}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-text-secondary">{signal.source}</td>
-                  <td className="px-6 py-4">
-                    <UrgencyBadge urgency={signal.urgency} />
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="px-2 py-0.5 rounded bg-white/5 text-[10px]">{signal.target_segment}</span>
-                  </td>
-                  <td className="px-6 py-4">
-                    {signal.campaign_triggered ? (
-                      <div className="w-5 h-5 rounded-full bg-success/20 flex items-center justify-center text-success">
-                        <TrendingUp size={12} />
-                      </div>
-                    ) : (
-                      <span className="text-text-secondary opacity-50">—</span>
+                <React.Fragment key={signal.id}>
+                  <tr 
+                    onClick={() => setExpandedId(expandedId === signal.id ? null : (signal.id || null))}
+                    className={cn(
+                      "hover:bg-white/[0.02] transition-colors group cursor-pointer",
+                      expandedId === signal.id && "bg-white/[0.03]"
                     )}
-                  </td>
-                  <td className="px-6 py-4 text-right opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button className="p-1 hover:bg-white/10 rounded transition-colors text-text-secondary">
-                      <MoreHorizontal size={16} />
-                    </button>
-                  </td>
-                </tr>
+                  >
+                    <td className="px-6 py-4 text-xs font-mono">{signal.timestamp}</td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center space-x-2">
+                        <SignalIcon type={signal.signal_type} />
+                        <span className="font-medium text-xs">{signal.signal_type}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-xs text-text-secondary">{signal.source}</td>
+                    <td className="px-6 py-4">
+                      <UrgencyBadge urgency={signal.urgency} />
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="px-2 py-0.5 rounded bg-white/5 text-[10px] font-bold">{signal.target_segment}</span>
+                    </td>
+                    <td className="px-6 py-4">
+                      {signal.campaign_triggered ? (
+                        <div className="w-5 h-5 rounded-full bg-success/20 flex items-center justify-center text-success">
+                          <TrendingUp size={12} />
+                        </div>
+                      ) : (
+                        <span className="text-text-secondary opacity-50">—</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      {expandedId === signal.id ? <ChevronUp size={14} className="text-primary" /> : <ChevronDown size={14} className="text-text-secondary" />}
+                    </td>
+                  </tr>
+                  <AnimatePresence>
+                    {expandedId === signal.id && (
+                      <motion.tr
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                      >
+                        <td colSpan={7} className="px-6 pb-6 bg-white/[0.01]">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-background/50 rounded-xl border border-white/5">
+                            <div className="space-y-3">
+                              <h4 className="text-[10px] font-bold text-text-secondary uppercase tracking-widest flex items-center">
+                                <Database size={10} className="mr-2" />
+                                Raw Signal Payload
+                              </h4>
+                              <div className="bg-black/30 rounded-lg p-3 font-mono text-[10px] text-text-secondary overflow-x-auto whitespace-pre-wrap leading-relaxed border border-white/5">
+                                {JSON.stringify(signal.raw_data, null, 2)}
+                              </div>
+                            </div>
+                            <div className="space-y-3">
+                              <h4 className="text-[10px] font-bold text-text-secondary uppercase tracking-widest flex items-center">
+                                <Cpu size={10} className="mr-2" />
+                                AI Classification & Logic
+                              </h4>
+                              <div className="bg-primary/5 rounded-lg p-3 border border-primary/20">
+                                <div className="text-xs text-primary font-bold mb-2">Intent Logic Result:</div>
+                                <div className="space-y-2">
+                                  {Object.entries(signal.ai_classification || {}).map(([key, val]) => (
+                                    <div key={key} className="flex items-center justify-between text-[10px] border-b border-white/5 pb-1 last:border-0">
+                                      <span className="text-text-secondary font-medium">{key.replace(/_/g, ' ')}</span>
+                                      <span className="text-text-primary font-bold">{String(val)}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                      </motion.tr>
+                    )}
+                  </AnimatePresence>
+                </React.Fragment>
               ))
             )}
           </tbody>
