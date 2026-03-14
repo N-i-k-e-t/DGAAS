@@ -47,5 +47,50 @@ export const seedData = async () => {
     ]);
   }
 
-  // Removed mock leads, signals, and logs to allow for real data import via CSV.
+  // 2. Seed Initial Greeting Signals (if empty)
+  const signalCount = await db.demand_signals.count();
+  if (signalCount === 0) {
+    await db.demand_signals.bulkAdd([
+      { 
+        timestamp: new Date().toLocaleTimeString(), 
+        signal_type: "Weather Spike", 
+        source: "OpenWeather", 
+        urgency: "high", 
+        target_segment: "Luxury Couple", 
+        campaign_triggered: false, 
+        raw_data: { temp: 28, condition: "Clear" },
+        ai_classification: { intent: "High", reasoning: "Perfect weather for vineyard tours." }
+      },
+      { 
+        timestamp: new Date().toLocaleTimeString(), 
+        signal_type: "AQI Alert", 
+        source: "IQAir", 
+        urgency: "critical", 
+        target_segment: "Family Weekend", 
+        campaign_triggered: true, 
+        raw_data: { aqi: 340, city: "Delhi" },
+        ai_classification: { intent: "Urgent", reasoning: "Escaping pollution is a primary motivator." }
+      }
+    ]);
+  }
+
+  // 3. Seed Initial Lead (if empty)
+  const leadCount = await db.leads.count();
+  if (leadCount === 0) {
+    await db.leads.add({
+      source: "Instagram",
+      name: "Sample Lead (Test)",
+      email: "test@example.com",
+      phone: "+91 9876543210",
+      city: "Mumbai",
+      life_event: "Anniversary",
+      ai_score: 85,
+      ai_reasoning: "Showing high interest in eco-resorts for anniversary celebration.",
+      segment: "Luxury Couple",
+      status: "new",
+      created_at: new Date().toISOString()
+    });
+  }
+
+  console.log('Database initialized with structural data.');
 };
