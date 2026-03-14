@@ -1,0 +1,21 @@
+[Unit]
+Description=VayaVia Agent Classifier Service
+After=network.target postgresql.service ollama.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/vayavia-agent
+ExecStart=/usr/bin/python3 -m agent.classifier_service
+Restart=always
+RestartSec=5
+EnvironmentFile=/opt/vayavia-agent/.env
+
+[Install]
+WantedBy=multi-user.target
+
+# Install instructions:
+# 1. cp /opt/vayavia-agent/systemd/vayavia-classifier.service /etc/systemd/system/
+# 2. systemctl daemon-reload
+# 3. systemctl enable vayavia-classifier
+# 4. systemctl start vayavia-classifier

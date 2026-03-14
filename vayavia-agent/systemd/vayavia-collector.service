@@ -1,0 +1,21 @@
+[Unit]
+Description=VayaVia Agent Collector Service
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/vayavia-agent
+ExecStart=/usr/bin/python3 -m agent.collector_service
+Restart=always
+RestartSec=10
+EnvironmentFile=/opt/vayavia-agent/.env
+
+[Install]
+WantedBy=multi-user.target
+
+# Install instructions:
+# 1. cp /opt/vayavia-agent/systemd/vayavia-collector.service /etc/systemd/system/
+# 2. systemctl daemon-reload
+# 3. systemctl enable vayavia-collector
+# 4. systemctl start vayavia-collector

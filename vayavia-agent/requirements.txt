@@ -1,0 +1,8 @@
+playwright==1.49.1
+fastapi==0.115.6
+uvicorn[standard]==0.32.1
+psycopg2-binary==2.9.10
+requests==2.32.3
+pydantic==2.10.3
+python-dotenv==1.0.1
+hashlib
