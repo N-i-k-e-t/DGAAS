@@ -1,6 +1,6 @@
-import { Clock, Play, Edit2, AlertCircle, Mail, MessageSquare } from 'lucide-react';
+import { Clock, Play, Edit2, AlertCircle, Mail, MessageSquare, Loader2 } from 'lucide-react';
 
-export const CampaignCard = ({ campaign, onToggle, onEdit, onTrigger }: any) => {
+export const CampaignCard = ({ campaign, onToggle, onEdit, onTrigger, isTriggering }: any) => {
   const getStatusColor = () => {
     switch (campaign.status) {
       case 'armed': return 'text-success';
@@ -72,11 +72,12 @@ export const CampaignCard = ({ campaign, onToggle, onEdit, onTrigger }: any) => 
           <span>Edit Template</span>
         </button>
         <button 
+          disabled={isTriggering || !campaign.is_active}
           onClick={() => onTrigger(campaign.id)}
-          className="p-2 bg-white/5 hover:bg-primary/20 hover:text-primary rounded-md transition-colors"
+          className="p-2 bg-white/5 hover:bg-primary/20 hover:text-primary rounded-md transition-colors disabled:opacity-50"
           title="Force Trigger"
         >
-          <Play size={14} />
+          {isTriggering ? <Loader2 size={14} className="animate-spin" /> : <Play size={14} />}
         </button>
       </div>
     </div>

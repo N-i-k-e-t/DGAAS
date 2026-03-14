@@ -1,9 +1,12 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db/database';
 import { CampaignCard } from '../components/campaigns/CampaignCard';
-import { Plus, Search, Activity } from 'lucide-react';
+import { Plus, Search, Activity, Loader2, CheckCircle2 } from 'lucide-react';
+import { fireCampaign } from '../lib/n8nClient';
+import { useState } from 'react';
 
 export default function Campaigns() {
+  const [isTriggering, setIsTriggering] = useState<number | null>(null);
   const campaigns = useLiveQuery(() => db.campaigns.toArray()) || [];
 
   const handleToggle = async (id: number) => {
@@ -14,10 +17,27 @@ export default function Campaigns() {
   };
 
   const handleTrigger = async (id: number) => {
-    await db.campaigns.update(id, { status: 'triggered', last_triggered: new Date().toISOString() });
-    setTimeout(async () => {
-      await db.campaigns.update(id, { status: 'cooldown' });
-    }, 5000);
+    setIsTriggering(id);
+    try {
+      const res = await fireCampaign(id.toString());
+      if (res.success) {
+        await db.campaigns.update(id, { 
+          status: 'triggered', 
+          last_triggered: new Date().toISOString() 
+        });
+        
+        setTimeout(async () => {
+          await db.campaigns.update(id, { status: 'cooldown' });
+          setIsTriggering(null);
+        }, 5000);
+      } else {
+        alert(res.message);
+        setIsTriggering(null);
+      }
+    } catch (err) {
+      console.error(err);
+      setIsTriggering(null);
+    }
   };
 
   return (
@@ -54,6 +74,7 @@ export default function Campaigns() {
           <CampaignCard 
             key={campaign.id} 
             campaign={campaign} 
+            isTriggering={isTriggering === campaign.id}
             onToggle={handleToggle}
             onTrigger={handleTrigger}
             onEdit={() => {}}

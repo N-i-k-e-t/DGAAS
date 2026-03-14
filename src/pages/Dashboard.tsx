@@ -9,10 +9,16 @@ import {
   TrendingUp,
   RefreshCw,
   Bot,
-  Download
+  Download,
+  CheckCircle2,
+  AlertCircle,
+  Loader2
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { db } from '../db/database';
 import { triggerWorkflow } from '../lib/n8nClient';
+import { useState } from 'react';
 
 import { useNavigate } from 'react-router-dom';
 import { clsx, type ClassValue } from 'clsx';
@@ -35,9 +41,9 @@ const MetricCard = ({ title, value, icon: Icon, color, trend, path }: any) => {
         <div className={`p-2 rounded-lg bg-${color}/10 text-${color}`}>
         <Icon size={24} />
       </div>
-      {trend && (
-        <span className={`text-xs ${trend > 0 ? 'text-success' : 'text-danger'}`}>
-          {trend > 0 ? '+' : ''}{trend}%
+      {trend !== undefined && (
+        <span className={`text-xs ${trend >= 0 ? 'text-success' : 'text-danger'}`}>
+          {trend >= 0 ? '+' : ''}{trend}%
         </span>
       )}
     </div>
@@ -50,38 +56,64 @@ const MetricCard = ({ title, value, icon: Icon, color, trend, path }: any) => {
 };
 
 const ActivityItem = ({ type, title, time, status }: any) => (
-  <div className="flex items-center p-4 hover:bg-white/5 transition-colors border-b border-white/5 last:border-0">
-    <div className={`w-2 h-2 rounded-full mr-4 ${
-      status === 'success' ? 'bg-success' : status === 'warning' ? 'bg-warning' : 'bg-primary'
+  <div className="flex items-center p-4 hover:bg-white/5 transition-colors border-b border-white/5 last:border-0 text-sm">
+    <div className={`w-2 h-2 rounded-full mr-4 shrink-0 ${
+      status === 'success' ? 'bg-success' : status === 'danger' ? 'bg-danger' : status === 'warning' ? 'bg-warning' : 'bg-primary'
     }`} />
-    <div className="flex-1">
-      <div className="text-sm font-medium">{title}</div>
-      <div className="text-xs text-text-secondary">{type}</div>
+    <div className="flex-1 min-w-0">
+      <div className="font-medium truncate">{title}</div>
+      <div className="text-[10px] text-text-secondary uppercase tracking-tight">{type}</div>
     </div>
-    <div className="text-xs text-text-secondary">{time}</div>
+    <div className="text-[10px] text-text-secondary ml-4 whitespace-nowrap">{time}</div>
   </div>
 );
 
-const ActionButton = ({ icon: Icon, label, onClick }: any) => (
-  <button 
-    onClick={onClick}
-    className="flex items-center space-x-3 w-full p-3 rounded-lg border border-white/5 hover:bg-primary/10 hover:border-primary/50 transition-all text-sm group"
-  >
-    <div className="p-2 rounded bg-white/5 text-text-secondary group-hover:text-primary transition-colors">
-      <Icon size={18} />
-    </div>
-    <span>{label}</span>
-  </button>
-);
+const ActionButton = ({ icon: Icon, label, onClick }: any) => {
+  const [loading, setLoading] = useState(false);
+  const [done, setDone] = useState(false);
+
+  const handleClick = async () => {
+    setLoading(true);
+    await onClick();
+    setLoading(false);
+    setDone(true);
+    setTimeout(() => setDone(false), 2000);
+  };
+
+  return (
+    <button 
+      disabled={loading}
+      onClick={handleClick}
+      className="flex items-center space-x-3 w-full p-3 rounded-lg border border-white/5 hover:bg-primary/10 hover:border-primary/50 transition-all text-sm group disabled:opacity-50"
+    >
+      <div className="p-2 rounded bg-white/5 text-text-secondary group-hover:text-primary transition-colors">
+        {loading ? <Loader2 size={18} className="animate-spin" /> : done ? <CheckCircle2 size={18} className="text-success" /> : <Icon size={18} />}
+      </div>
+      <span>{label}</span>
+      {done && <span className="text-[10px] text-success font-bold uppercase ml-auto">Triggered</span>}
+    </button>
+  );
+};
 
 export const Dashboard = () => {
+  const signalsCount = useLiveQuery(() => db.demand_signals.count()) || 0;
+  const leadsCount = useLiveQuery(() => db.leads.count()) || 0;
+  const hotLeadsCount = useLiveQuery(() => db.leads.where('ai_score').above(70).count()) || 0;
+  const campaignsCount = useLiveQuery(() => db.campaigns.where('is_active').equals(1).count()) || 0;
+  const recentSignals = useLiveQuery(() => db.demand_signals.reverse().limit(10).toArray()) || [];
+  const topSegment = useLiveQuery(async () => {
+    const signals = await db.demand_signals.toArray();
+    const counts: Record<string, number> = {};
+    signals.forEach(s => counts[s.target_segment] = (counts[s.target_segment] || 0) + 1);
+    return Object.entries(counts).sort((a,b) => b[1] - a[1])[0]?.[0] || 'N/A';
+  }) || 'Loading...';
+
   return (
     <div className="p-6 space-y-6">
-      {/* Row 1: Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
         <MetricCard 
           title="Signals Today" 
-          value="142" 
+          value={signalsCount} 
           icon={Radar} 
           color="primary" 
           trend={12}
@@ -89,7 +121,7 @@ export const Dashboard = () => {
         />
         <MetricCard 
           title="Hot Leads" 
-          value="24" 
+          value={hotLeadsCount} 
           icon={Flame} 
           color="warning" 
           trend={5}
@@ -97,71 +129,57 @@ export const Dashboard = () => {
         />
         <MetricCard 
           title="Active Campaigns" 
-          value="4" 
+          value={campaignsCount} 
           icon={Megaphone} 
           color="secondary"
           path="/campaigns"
         />
         <MetricCard 
-          title="Forecast Score" 
+          title="Forecast" 
           value="High" 
           icon={LineChart} 
           color="success"
           path="/forecasts"
         />
         <MetricCard 
-          title="Website Visitors" 
-          value="1,280" 
-          icon={Eye} 
+          title="Top Segment" 
+          value={topSegment} 
+          icon={Bot} 
           color="blue-500" 
-          trend={-2}
         />
         <MetricCard 
-          title="AI Model Status" 
-          value="Online" 
-          icon={Cpu} 
-          color="success"
-          path="/logs"
+          title="Total Leads" 
+          value={leadsCount} 
+          icon={Eye} 
+          color="primary"
+          path="/leads"
         />
       </div>
 
-      {/* Row 2: Activity & Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-10 gap-6">
         <div className="lg:col-span-6 card p-0 overflow-hidden">
           <div className="p-4 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
-            <h3 className="font-semibold">Recent Activity</h3>
-            <button className="text-xs text-primary hover:underline">View All</button>
+            <h3 className="font-semibold text-sm uppercase tracking-wider">Live Activity Stream</h3>
+            <button className="text-[10px] text-primary hover:underline font-bold uppercase">View Logs</button>
           </div>
-          <div className="max-h-[400px] overflow-y-auto">
-            <ActivityItem 
-              type="Demand Signal" 
-              title="Pollution spike detected in Delhi (AQI 340)" 
-              time="2 mins ago" 
-              status="danger" 
-            />
-            <ActivityItem 
-              type="Campaign" 
-              title="Pollution Escape triggered for 120 leads" 
-              time="5 mins ago" 
-              status="success" 
-            />
-            <ActivityItem 
-              type="Lead" 
-              title="New high-score lead from Instagram (92)" 
-              time="15 mins ago" 
-              status="primary" 
-            />
-            <ActivityItem 
-              type="System" 
-              title="n8n workflow 'Price Monitor' completed" 
-              time="1 hour ago" 
-              status="success" 
-            />
+          <div className="max-h-[440px] overflow-y-auto custom-scrollbar">
+            {recentSignals.map(signal => (
+              <ActivityItem 
+                key={signal.id}
+                type={signal.signal_type} 
+                title={`${signal.source}: ${signal.target_segment} intent detected`} 
+                time={signal.timestamp} 
+                status={signal.urgency === 'critical' || signal.urgency === 'high' ? 'danger' : 'primary'} 
+              />
+            ))}
+            {recentSignals.length === 0 && (
+              <div className="p-10 text-center text-xs text-text-secondary italic">No recent activity detected.</div>
+            )}
           </div>
         </div>
 
         <div className="lg:col-span-4 card space-y-4">
-          <h3 className="font-semibold mb-2">Quick Actions</h3>
+          <h3 className="font-semibold text-sm uppercase tracking-wider mb-2">Command Center</h3>
           <ActionButton 
             icon={Cloud} 
             label="Force Weather Check" 
@@ -179,14 +197,23 @@ export const Dashboard = () => {
           />
           <ActionButton 
             icon={Bot} 
-            label="Test AI Model" 
-            onClick={() => triggerWorkflow('ai-test')}
-          />
-          <ActionButton 
-            icon={Download} 
-            label="Sync Live Data" 
+            label="Sync VPS Intelligence" 
             onClick={() => triggerWorkflow('vps-sync')}
           />
+          <div className="mt-6 p-4 rounded-xl bg-primary/5 border border-primary/20 space-y-3">
+             <div className="flex items-center space-x-3 text-primary">
+                <Cpu size={18} />
+                <span className="text-xs font-bold uppercase">System Status</span>
+             </div>
+             <div className="flex justify-between text-[10px]">
+                <span className="text-text-secondary">Ollama (qwen2.5)</span>
+                <span className="text-success font-bold">ACTIVE</span>
+             </div>
+             <div className="flex justify-between text-[10px]">
+                <span className="text-text-secondary">n8n Gateway</span>
+                <span className="text-success font-bold">CONNECTED</span>
+             </div>
+          </div>
         </div>
       </div>
 
