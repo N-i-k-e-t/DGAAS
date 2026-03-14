@@ -17,26 +17,62 @@ const categories = [
     tables: [
       { id: 'travel_agents', name: 'Travel Agents', count: 330 },
       { id: 'wedding_event_planners', name: 'Wedding Event Planners', count: 22 },
-      { id: 'maharashtra_tourism_govt', name: 'Maharashtra Tourism Govt', count: 17 },
+      { id: 'travel_pr_journalists', name: 'Travel PR Journalists', count: 22 },
+      { id: 'maharashtra_tourism_govt', name: 'Tourism Government', count: 17 },
+      { id: 'bus_operators', name: 'Bus Operators', count: 15 },
     ]
   },
   {
     name: 'NASHIK ECOSYSTEM',
     tables: [
-      { id: 'nashik_tourism_db', name: 'Nashik Tourism Database', count: 31 },
+      { id: 'nashik_tourism_db', name: 'Tourism Database', count: 31 },
       { id: 'property_listings', name: 'Property Listings', count: 22 },
       { id: 'coworking_startups', name: 'Coworking Startups', count: 22 },
-      { id: 'photo_video_drone', name: 'Photo Video Drone', count: 22 },
-      { id: 'real_estate_developers', name: 'Real Estate Developers', count: 17 },
+      { id: 'photo_video_drone', name: 'AV & Drone Creators', count: 12 },
+      { id: 'real_estate_developers', name: 'Real Estate Devs', count: 17 },
+      { id: 'wellness_yoga_retreats', name: 'Wellness & Yoga', count: 10 },
+      { id: 'spiritual_sites', name: 'Spiritual Sites', count: 25 },
     ]
   },
   {
     name: 'INFLUENCERS & MEDIA',
     tables: [
       { id: 'travel_influencers', name: 'Travel Influencers', count: 22 },
-      { id: 'nashik_content_creators', name: 'Nashik Content Creators', count: 22 },
-      { id: 'family_mom_influencers', name: 'Family Mom Influencers', count: 22 },
-      { id: 'travel_pr_journalists', name: 'Travel PR Journalists', count: 22 },
+      { id: 'nashik_content_creators', name: 'Nashik Creators', count: 22 },
+      { id: 'family_mom_influencers', name: 'Family Influencers', count: 22 },
+      { id: 'nomad_communities', name: 'Nomad Communities', count: 18 },
+    ]
+  },
+  {
+    name: 'CUSTOMER JOURNEY',
+    tables: [
+      { id: 'journey_stage1_dream', name: 'Phase 1: Dream', count: 0 },
+      { id: 'journey_stage2_research', name: 'Phase 2: Research', count: 0 },
+      { id: 'journey_stage3_shortlist', name: 'Phase 3: Shortlist', count: 0 },
+      { id: 'journey_stage4_compare', name: 'Phase 4: Compare', count: 0 },
+      { id: 'journey_stage5_book', name: 'Phase 5: Book', count: 0 },
+      { id: 'journey_stage6_experience', name: 'Phase 6: Experience', count: 0 },
+      { id: 'journey_stage7_advocate', name: 'Phase 7: Advocate', count: 0 },
+    ]
+  },
+  {
+    name: 'STRATEGY & DATA',
+    tables: [
+      { id: 'content_strategy_50', name: 'Content Topics (50)', count: 50 },
+      { id: 'traveler_segments', name: 'Target Segments', count: 8 },
+      { id: 'social_media_calendar', name: 'Social Calendar', count: 0 },
+      { id: 'email_marketing', name: 'Email Sequences', count: 0 },
+      { id: 'weather_data_sources', name: 'Weather Sources', count: 5 },
+      { id: 'life_event_triggers', name: 'AI Event Triggers', count: 12 },
+    ]
+  },
+  {
+    name: 'ENGINE INTERNAL',
+    tables: [
+      { id: 'demand_signals', name: 'Raw Signals', count: 0 },
+      { id: 'leads', name: 'Managed Leads', count: 0 },
+      { id: 'workflow_logs', name: 'Workflow Logs', count: 0 },
+      { id: 'weekly_forecasts', name: 'AI Forecasts', count: 0 },
     ]
   }
 ];

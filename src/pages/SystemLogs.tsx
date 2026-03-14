@@ -1,6 +1,8 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db/database';
-import { Terminal, Cpu, Database, Wifi, Shield, RefreshCw, Search } from 'lucide-react';
+import type { WorkflowLog } from '../db/database';
+import { Terminal, Cpu, Database, Wifi, Shield, RefreshCw, Search, ChevronRight } from 'lucide-react';
+import { useState } from 'react';
 
 const StatusCard = ({ title, value, status, icon: Icon }: any) => (
   <div className="card flex items-center space-x-4">
@@ -18,6 +20,7 @@ const StatusCard = ({ title, value, status, icon: Icon }: any) => (
 );
 
 export default function SystemLogs() {
+  const [selectedLog, setSelectedLog] = useState<WorkflowLog | null>(null);
   const logs = useLiveQuery(() => db.workflow_logs.reverse().toArray()) || [];
 
   return (
@@ -73,7 +76,11 @@ export default function SystemLogs() {
                     </tr>
                   ) : (
                     logs.map((log) => (
-                      <tr key={log.id} className="hover:bg-white/[0.02] transition-colors">
+                      <tr 
+                        key={log.id} 
+                        onClick={() => setSelectedLog(log)}
+                        className={`hover:bg-white/[0.04] transition-colors cursor-pointer ${selectedLog?.id === log.id ? 'bg-primary/5' : ''}`}
+                      >
                         <td className="px-6 py-4 font-medium">{log.workflow_name}</td>
                         <td className="px-6 py-4">
                           <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border ${
@@ -85,29 +92,10 @@ export default function SystemLogs() {
                         <td className="px-6 py-4 font-mono text-text-secondary">{log.duration_ms}ms</td>
                         <td className="px-6 py-4 text-text-secondary">{log.started_at}</td>
                         <td className="px-6 py-4 text-right">
-                          <button className="text-primary hover:underline">Details</button>
+                           <ChevronRight size={14} className="ml-auto text-text-secondary" />
                         </td>
                       </tr>
                     ))
-                  )}
-                  {/* Mock data if empty */}
-                  {logs.length === 0 && (
-                    <>
-                      <tr className="hover:bg-white/[0.02]">
-                        <td className="px-6 py-4 font-medium">Weather Monitor</td>
-                        <td className="px-6 py-4"><span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border bg-success/10 text-success border-success/20">SUCCESS</span></td>
-                        <td className="px-6 py-4 font-mono text-text-secondary">450ms</td>
-                        <td className="px-6 py-4 text-text-secondary">2 mins ago</td>
-                        <td className="px-6 py-4 text-right"><button className="text-primary hover:underline text-[10px]">VIEW LOG</button></td>
-                      </tr>
-                      <tr className="hover:bg-white/[0.02]">
-                        <td className="px-6 py-4 font-medium">Lead Scorer</td>
-                        <td className="px-6 py-4"><span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border bg-success/10 text-success border-success/20">SUCCESS</span></td>
-                        <td className="px-6 py-4 font-mono text-text-secondary">1.2s</td>
-                        <td className="px-6 py-4 text-text-secondary">15 mins ago</td>
-                        <td className="px-6 py-4 text-right"><button className="text-primary hover:underline text-[10px]">VIEW LOG</button></td>
-                      </tr>
-                    </>
                   )}
                 </tbody>
               </table>
@@ -116,19 +104,33 @@ export default function SystemLogs() {
         </div>
 
         <div className="lg:col-span-3 card flex flex-col h-full bg-background border-primary/20">
-          <div className="flex items-center space-x-2 text-primary mb-4">
-            <Terminal size={18} />
-            <h3 className="font-bold">Raw Log Viewer</h3>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-2 text-primary">
+              <Terminal size={18} />
+              <h3 className="font-bold">Raw Log Viewer</h3>
+            </div>
+            {selectedLog && (
+              <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded uppercase font-bold">
+                {selectedLog.workflow_name}
+              </span>
+            )}
           </div>
-          <div className="flex-1 bg-black/40 rounded-lg p-3 font-mono text-[10px] text-primary/80 overflow-y-auto space-y-1">
-            <div className="text-primary underline mb-2">--- START WORKFLOW: WEATHER_CHECK ---</div>
-            <div>[08:55:01] Calling OpenWeather API for Delhi...</div>
-            <div>[08:55:02] Result: AQI 340 (Critical)</div>
-            <div>[08:55:02] Matching leads with Segment:Delhi_NCR...</div>
-            <div>[08:55:03] Found 120 matching leads.</div>
-            <div>[08:55:03] Triggering n8n campaign: 'Pollution Escape'</div>
-            <div>[08:55:04] 202 ACCEPTED. Campaign ID: vvc-10492</div>
-            <div className="text-success mt-2">--- WORKFLOW COMPLETE (SUCCESS) ---</div>
+          <div className="flex-1 bg-black/40 rounded-lg p-3 font-mono text-[11px] text-primary/80 overflow-y-auto space-y-2 whitespace-pre-wrap leading-relaxed custom-scrollbar">
+            {selectedLog ? (
+              <>
+                <div className="text-primary/50 text-[9px] border-b border-white/5 pb-2 mb-2">
+                  ID: {selectedLog.id} | START: {selectedLog.started_at}
+                </div>
+                {selectedLog.logs}
+                {selectedLog.status === 'success' && <div className="text-success mt-1">--- SUCCESS: WORKFLOW COMPLETE ---</div>}
+                {selectedLog.status === 'error' && <div className="text-danger mt-1">--- FAILED: EXECUTION CRASHED ---</div>}
+              </>
+            ) : (
+              <div className="h-full flex flex-col items-center justify-center text-center opacity-40">
+                 <Terminal size={32} className="mb-4" />
+                 <p className="text-[10px] uppercase tracking-widest font-bold">Select a workflow execution<br/>to view detailed logs</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
