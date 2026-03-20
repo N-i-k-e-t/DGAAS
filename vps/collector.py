@@ -21,7 +21,7 @@ log = logging.getLogger('collector')
 DB = dict(dbname='vayavia_agent', user='postgres', password='postgres', host='localhost')
 WEATHER_KEY = '2dce6b15be076925e81c0765e9a3a7e4'
 CYCLE_INTERVAL = 3600  # 1 hour in seconds
-MAX_RETRIES = 2
+time.sleep(min(wait, 10))
 RETRY_DELAY = 5
 
 # --- Platform configs ---
@@ -169,7 +169,7 @@ def safe_request(url, headers=None, timeout=15):
             if r.status_code == 429:
                 wait = int(r.headers.get('Retry-After', 60))
                 log.warning(f'Rate limited on {url}, waiting {wait}s')
-                time.sleep(min(wait, 120))
+                time.sleep(min(wait, 10))
                 continue
             if r.status_code >= 500:
                 log.warning(f'Server error {r.status_code} on {url}, retry {attempt+1}')
