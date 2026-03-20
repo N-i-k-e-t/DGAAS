@@ -28,69 +28,23 @@ export const clearData = async () => {
     db.campaign_logs,
     db.decision_logs
   ];
-
   for (const table of tables) {
     await table.clear();
   }
-  console.log('Database cleared of mock data.');
+  console.log('Database cleared of all data.');
 };
 
 export const seedData = async () => {
-  // 1. Seed Campaigns (Real scenarios/logic templates)
+  // Only seed campaign templates (structural data, not fake signals/leads)
   const campaignCount = await db.campaigns.count();
   if (campaignCount === 0) {
     await db.campaigns.bulkAdd([
       { name: "Pollution Escape", trigger: "AQI > 200 in feeder cities", status: "armed", is_active: true, cooldown_hours: 72, email_template: "<h1>Pollution Escape</h1><p>Hi {name}, escape the smog of {city} and breathe fresh in Nashik!</p>", whatsapp_template: "Hi {name}, the AQI in {city} is high today. Escape to Nashik for a fresh weekend!" },
-      { name: "Clear Weekend Push", trigger: "Clear weekend forecast + 22-30°C", status: "armed", is_active: true, cooldown_hours: 168, email_template: "<h1>Perfect Weekend Ahead!</h1><p>Hi {name}, Nashik weather is beautiful this weekend.</p>", whatsapp_template: "Hi {name}, beautiful weather in Nashik this weekend! Ready for a wine tour?" },
+      { name: "Clear Weekend Push", trigger: "Clear weekend forecast + 22-30\u00b0C", status: "armed", is_active: true, cooldown_hours: 168, email_template: "<h1>Perfect Weekend Ahead!</h1><p>Hi {name}, Nashik weather is beautiful this weekend.</p>", whatsapp_template: "Hi {name}, beautiful weather in Nashik this weekend! Ready for a wine tour?" },
       { name: "Trend Spike Alert", trigger: "Keyword volume > 30% WoW", status: "armed", is_active: true, cooldown_hours: 48, email_template: "<h1>Trending in Nashik</h1><p>Hi {name}, Nashik is trending! Book your stay now.</p>", whatsapp_template: "Hi {name}, Nashik is the place to be this weekend! Don't miss out." },
       { name: "Competitor Sellout", trigger: ">80% city occupancy", status: "armed", is_active: true, cooldown_hours: 120, email_template: "<h1>Hurry! Almost Sold Out</h1><p>Hi {name}, Nashik is filling up fast.</p>", whatsapp_template: "Hi {name}, only a few properties left in Nashik for this weekend!" }
     ]);
   }
-
-  // 2. Seed Initial Greeting Signals (if empty)
-  const signalCount = await db.demand_signals.count();
-  if (signalCount === 0) {
-    await db.demand_signals.bulkAdd([
-      { 
-        timestamp: new Date().toLocaleTimeString(), 
-        signal_type: "Weather Spike", 
-        source: "OpenWeather", 
-        urgency: "high", 
-        target_segment: "Luxury Couple", 
-        campaign_triggered: false, 
-        raw_data: { temp: 28, condition: "Clear" },
-        ai_classification: { intent: "High", reasoning: "Perfect weather for vineyard tours." }
-      },
-      { 
-        timestamp: new Date().toLocaleTimeString(), 
-        signal_type: "AQI Alert", 
-        source: "IQAir", 
-        urgency: "critical", 
-        target_segment: "Family Weekend", 
-        campaign_triggered: true, 
-        raw_data: { aqi: 340, city: "Delhi" },
-        ai_classification: { intent: "Urgent", reasoning: "Escaping pollution is a primary motivator." }
-      }
-    ]);
-  }
-
-  // 3. Seed Initial Lead (if empty)
-  const leadCount = await db.leads.count();
-  if (leadCount === 0) {
-    await db.leads.add({
-      source: "Instagram",
-      name: "Sample Lead (Test)",
-      email: "test@example.com",
-      phone: "+91 9876543210",
-      city: "Mumbai",
-      life_event: "Anniversary",
-      ai_score: 85,
-      ai_reasoning: "Showing high interest in eco-resorts for anniversary celebration.",
-      segment: "Luxury Couple",
-      status: "new",
-      created_at: new Date().toISOString()
-    });
-  }
-
-  console.log('Database initialized with structural data.');
+  // No fake signals or leads are seeded - only real data from VPS sync
+  console.log('Campaign templates initialized. No mock data seeded.');
 };
