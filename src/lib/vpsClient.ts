@@ -1,4 +1,4 @@
-const VPS_API = import.meta.env.VITE_VPS_API_URL || 'http://46.202.160.119/api';
+const VPS_API = import.meta.env.VITE_VPS_API_URL || 'http://46.202.160.119:8090/api';
 
 export interface VpsSignal {
   id: number;
