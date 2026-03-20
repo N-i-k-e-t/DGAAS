@@ -21,8 +21,8 @@ log = logging.getLogger('collector')
 DB = dict(dbname='vayavia_agent', user='postgres', password='postgres', host='localhost')
 WEATHER_KEY = '2dce6b15be076925e81c0765e9a3a7e4'
 CYCLE_INTERVAL = 3600  # 1 hour in seconds
-MAX_RETRIES = 3
-RETRY_DELAY = 30
+MAX_RETRIES = 2
+RETRY_DELAY = 5
 
 # --- Platform configs ---
 SUBREDDITS = ['india', 'travel', 'wine', 'IndiaTravelAdvice', 'solotravel', 'digitalnomad']
@@ -178,10 +178,10 @@ def safe_request(url, headers=None, timeout=15):
             return r
         except requests.exceptions.Timeout:
             log.warning(f'Timeout on {url}, retry {attempt+1}')
-            time.sleep(5)
+            time.sleep(1)
         except Exception as e:
             log.warning(f'Request error {url}: {e}')
-            time.sleep(5)
+            time.sleep(1)
     return None
 
 # ============ PLATFORM: REDDIT ============
@@ -221,7 +221,7 @@ def collect_twitter():
     for query in TWITTER_QUERIES:
         try:
             # Nitter instances for public Twitter scraping
-            for nitter in ['https://nitter.net', 'https://nitter.privacydev.net', 'https://nitter.poast.org']:
+            for nitter in ['https://nitter.poast.org']:
                 try:
                     url = f'{nitter}/search?q={query.replace(" ", "+")}&f=tweets'
                     r = safe_request(url, headers=hdrs, timeout=10)
@@ -246,7 +246,7 @@ def collect_twitter():
                             break
                 except Exception:
                     continue
-            time.sleep(3)
+            time.sleep(1)
         except Exception as e:
             log.warning(f'Twitter {query}: {e}')
     log.info(f'Twitter/X: {len(signals)} signals')
@@ -284,7 +284,7 @@ def collect_instagram():
                             break
                 except Exception:
                     continue
-            time.sleep(3)
+            time.sleep(1)
         except Exception as e:
             log.warning(f'Instagram #{tag}: {e}')
     log.info(f'Instagram: {len(signals)} signals')
@@ -313,7 +313,7 @@ def collect_facebook():
                             'author': '', 'likes': 0, 'comments': 0, 'shares': 0,
                             'hashtags': '', 'followers': 0, 'location': ''
                         })
-            time.sleep(3)
+            time.sleep(1)
         except Exception as e:
             log.warning(f'Facebook {query}: {e}')
     # Also try FB page RSS via RSS bridges
@@ -359,7 +359,7 @@ def collect_quora():
                             'author': '', 'likes': 0, 'comments': 0, 'shares': 0,
                             'hashtags': '', 'followers': 0, 'location': ''
                         })
-            time.sleep(3)
+            time.sleep(1)
         except Exception as e:
             log.warning(f'Quora {query}: {e}')
     log.info(f'Quora: {len(signals)} signals')
