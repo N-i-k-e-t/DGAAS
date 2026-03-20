@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Sidebar } from './components/layout/Sidebar';
 import { TopBar } from './components/layout/TopBar';
+import { VpsStatusBanner } from './components/VpsStatusBanner';
 import { seedData } from './db/seed';
 import { Dashboard } from './pages/Dashboard';
 import Signals from './pages/Signals';
@@ -27,7 +28,10 @@ function App() {
         <Sidebar isCollapsed={isSidebarCollapsed} setIsCollapsed={setIsSidebarCollapsed} />
         <div className={`flex-1 flex flex-col transition-all duration-300 ${isSidebarCollapsed ? 'pl-16' : 'pl-60'}`}>
           <TopBar isSidebarCollapsed={isSidebarCollapsed} />
-          <main className="mt-16 flex-1 overflow-auto">
+          <div className="mt-16 px-4 py-2">
+            <VpsStatusBanner />
+          </div>
+          <main className="flex-1 overflow-auto">
             <Routes>
               <Route path="/" element={<Dashboard />} />
               <Route path="/signals" element={<Signals />} />
