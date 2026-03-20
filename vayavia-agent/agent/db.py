@@ -61,7 +61,6 @@ def insert_signal_and_lead(raw_signal_id, segment, score, urgency, text_snippet,
     conn = get_conn()
     cur = conn.cursor()
     try:
-        # Insert into signals
         cur.execute(
             """
             INSERT INTO signals (raw_signal_id, segment, score, urgency)
@@ -70,8 +69,6 @@ def insert_signal_and_lead(raw_signal_id, segment, score, urgency, text_snippet,
             (raw_signal_id, segment, score, urgency)
         )
         signal_id = cur.fetchone()[0]
-
-        # Insert into leads if score >= 50
         if score >= 50:
             cur.execute(
                 """
@@ -80,7 +77,6 @@ def insert_signal_and_lead(raw_signal_id, segment, score, urgency, text_snippet,
                 """,
                 (signal_id, platform, segment, score, urgency, text_snippet[:200], source_url)
             )
-        
         conn.commit()
     except Exception as e:
         conn.rollback()
@@ -131,11 +127,52 @@ def get_today_stats():
         cur.close()
         conn.close()
 
+def get_full_stats():
+    conn = get_conn()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    try:
+        cur.execute("SELECT COUNT(*) as total FROM raw_signals")
+        total_signals = cur.fetchone()["total"]
+        cur.execute("SELECT COUNT(*) as total FROM leads")
+        total_leads = cur.fetchone()["total"]
+        cur.execute("SELECT COUNT(*) as total FROM leads WHERE score >= 70")
+        hot_leads = cur.fetchone()["total"]
+        cur.execute("SELECT source_site, COUNT(*) as cnt FROM raw_signals GROUP BY source_site")
+        by_source = {row["source_site"]: row["cnt"] for row in cur.fetchall()}
+        cur.execute("SELECT segment, COUNT(*) as cnt FROM signals GROUP BY segment")
+        by_segment = {row["segment"]: row["cnt"] for row in cur.fetchall()}
+        return {
+            "total_signals": total_signals,
+            "total_leads": total_leads,
+            "hot_leads": hot_leads,
+            "by_source": by_source,
+            "by_segment": by_segment,
+        }
+    finally:
+        cur.close()
+        conn.close()
+
+def get_latest_signals(limit=50):
+    conn = get_conn()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    try:
+        cur.execute(
+            "SELECT id, source_site, url, text_snippet, found_at, classified FROM raw_signals ORDER BY found_at DESC LIMIT %s",
+            (limit,)
+        )
+        return cur.fetchall()
+    finally:
+        cur.close()
+        conn.close()
+
 def get_latest_leads(limit=50):
     conn = get_conn()
     cur = conn.cursor(cursor_factory=RealDictCursor)
     try:
-        cur.execute("SELECT id, segment, score, urgency, status, original_url, created_at FROM leads ORDER BY created_at DESC LIMIT %s", (limit,))
+        cur.execute(
+            "SELECT l.id, l.signal_id, l.segment, l.score, l.urgency, l.platform, l.handle, l.ai_message, l.original_url, l.created_at FROM leads l ORDER BY l.created_at DESC LIMIT %s",
+            (limit,)
+        )
         return cur.fetchall()
     finally:
         cur.close()
