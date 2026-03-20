@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Sidebar } from './components/layout/Sidebar';
 import { TopBar } from './components/layout/TopBar';
 import { VpsStatusBanner } from './components/VpsStatusBanner';
-import { seedData } from './db/seed';
+import { seedData, clearData } from './db/seed';
 import { Dashboard } from './pages/Dashboard';
 import Signals from './pages/Signals';
 import Leads from './pages/Leads';
@@ -19,7 +19,15 @@ function App() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = React.useState(false);
 
   useEffect(() => {
-    seedData();
+        const init = async () => {
+      const cleaned = localStorage.getItem('v2_cleaned');
+      if (!cleaned) {
+        await clearData();
+        localStorage.setItem('v2_cleaned', 'true');
+      }
+      await seedData();
+    };
+    init();
   }, []);
 
   return (
