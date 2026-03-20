@@ -11,17 +11,17 @@ export async function syncVpsToLocal(): Promise<{ synced: number; error?: string
     let added = 0;
 
     for (const sig of signals) {
-      const existing = await db.demand_signals.where('timestamp').equals(sig.found_at).first();
+      const existing = await db.demand_signals.where('timestamp').equals(sig.created_at).first();
       if (!existing) {
         await db.demand_signals.add({
-          timestamp: sig.found_at,
+          timestamp: sig.created_at,
           signal_type: 'social_mention',
-          source: sig.source_site,
-          urgency: 'medium',
-          target_segment: 'Wine Enthusiast',
+          source: 'reddit',
+          urgency: sig.urgency || 'medium',
+          target_segment: sig.segment || 'Wine Enthusiast',
           campaign_triggered: false,
-          raw_data: { url: sig.url, snippet: sig.text_snippet },
-          ai_classification: { classified: sig.classified },
+          raw_data: { signal_id: sig.id, raw_signal_id: sig.raw_signal_id },
+          ai_classification: { score: sig.score, segment: sig.segment },
         });
         added++;
       }
