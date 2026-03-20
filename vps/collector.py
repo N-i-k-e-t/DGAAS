@@ -1,21 +1,27 @@
 import psycopg2, requests, json, time, re, logging
 from datetime import datetime
 import feedparser
-
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
 log = logging.getLogger('collector')
-
 DB = dict(dbname='vayavia_agent', user='postgres', password='postgres', host='localhost')
 WEATHER_KEY = '2dce6b15be076925e81c0765e9a3a7e4'
-OLLAMA_URL = 'http://localhost:11434/api/generate'
-
 SUBREDDITS = ['india', 'travel', 'wine', 'IndiaTravelAdvice', 'solotravel', 'digitalnomad']
-
 RSS_FEEDS = [
     'https://news.google.com/rss/search?q=nashik+wine+tourism&hl=en-IN&gl=IN',
     'https://news.google.com/rss/search?q=nashik+vineyard+stay&hl=en-IN&gl=IN',
     'https://news.google.com/rss/search?q=maharashtra+wine+resort&hl=en-IN&gl=IN',
 ]
+
+SEGMENT_KEYWORDS = {
+    'Wine Enthusiast': ['wine tasting', 'winery', 'sula', 'vineyard tour', 'sommelier', 'grapes'],
+    'Weekend Getaway': ['weekend', 'getaway', 'short trip', 'day trip', '2 days'],
+    'Luxury Seeker': ['luxury', 'premium', 'spa', 'resort', '5 star', 'boutique'],
+    'Couples/Romance': ['couple', 'romantic', 'honeymoon', 'anniversary', 'date'],
+    'Family Vacation': ['family', 'kids', 'children', 'group trip'],
+    'Corporate Group': ['corporate', 'team', 'offsite', 'conference', 'retreat'],
+    'Budget Traveler': ['budget', 'cheap', 'affordable', 'backpack', 'hostel'],
+    'Seasonal Traveler': ['festival', 'season', 'harvest', 'grape stomping', 'winter'],
+}
 
 def get_conn():
     return psycopg2.connect(**DB)
@@ -30,29 +36,34 @@ def insert_raw(cur, src, url, txt):
     )
     return cur.fetchone()[0]
 
-def ai_score(text):
-    prompt = (
-        'You are a demand intelligence AI for VayaVia, a wine tourism property in Nashik, India. '
-        'Analyze this text and respond ONLY with valid JSON (no markdown): '
-        '{"segment": "one of: Wine Enthusiast, Weekend Getaway, Luxury Seeker, Family Vacation, '
-        'Couples/Romance, Corporate Group, Budget Traveler, Seasonal Traveler", '
-        '"score": integer 1-100, "urgency": "critical/high/medium/low", '
-        '"reasoning": "brief"}. Text: ' + text[:300]
-    )
-    try:
-        r = requests.post(OLLAMA_URL, json={
-            'model': 'gemma3:4b',
-            'prompt': prompt,
-            'stream': False,
-            'options': {'temperature': 0.3, 'num_predict': 200}
-        }, timeout=60)
-        resp = r.json().get('response', '')
-        m = re.search(r'\{[^{}]+\}', resp, re.DOTALL)
-        if m:
-            return json.loads(m.group())
-    except Exception as e:
-        log.warning(f'AI error: {e}')
-    return {'segment': 'Unknown', 'score': 40, 'urgency': 'low', 'reasoning': 'AI unavailable'}
+def keyword_score(text):
+    t = text.lower()
+    high = ['book', 'stay', 'visit', 'plan', 'recommend', 'looking for', 'want to go', 'trip to nashik']
+    med = ['nashik', 'wine', 'vineyard', 'winery', 'sula', 'tourism', 'maharashtra']
+    score = 30
+    for k in high:
+        if k in t:
+            score += 15
+    for k in med:
+        if k in t:
+            score += 5
+    score = min(100, score)
+    seg = 'Unknown'
+    best = 0
+    for s, kws in SEGMENT_KEYWORDS.items():
+        c = sum(1 for k in kws if k in t)
+        if c > best:
+            best = c
+            seg = s
+    if seg == 'Unknown':
+        seg = 'Wine Enthusiast'
+    if score >= 70:
+        urg = 'high'
+    elif score >= 50:
+        urg = 'medium'
+    else:
+        urg = 'low'
+    return {'segment': seg, 'score': score, 'urgency': urg, 'reasoning': f'Keyword match score {score}'}
 
 def collect_reddit():
     signals = []
@@ -166,7 +177,7 @@ def run_cycle():
         if not rid:
             continue
         ns += 1
-        ai = ai_score(txt)
+        ai = keyword_score(txt)
         seg = ai.get('segment', 'Unknown')
         sc = min(100, max(1, int(ai.get('score', 40))))
         urg = ai.get('urgency', 'low')
