@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""VayaVia Demand Engine - Multi-Platform Collector v3.2
+"""VayaVia Demand Engine - Multi-Platform Collector v3.3
 Auto-triggering, self-healing daemon. Collects from Reddit, Google News,
-Weather (Open-Meteo), Google Trends, Twitter/X (via Nitter), Quora.
+Weather (Open-Meteo), Google Trends, Twitter/X (via Nitter), Quora, Instagram, Facebook.
 Each platform stored SEPARATELY with platform-specific fields.
 Stores ALL real data. Runs as systemd daemon with auto error recovery."""
 import psycopg2, requests, json, time, re, logging, sys, traceback
@@ -306,6 +306,66 @@ def collect_quora(conn):
     log.info(f'Quora: {raw} raw, {stored} stored')
     return raw, stored
 
+
+# --- INSTAGRAM COLLECTOR ---
+def collect_instagram(conn):
+    """Collect Instagram posts about Nashik wine tourism via web scraping."""
+    count = 0
+    cur = conn.cursor()
+    hashtags = ['nashikwine', 'nashikwinery', 'sulavineyards', 'yorkwinery', 'nashiktravel',
+                'winetourism', 'maharashtrawine', 'indianwine', 'groverzampa', 'nashikweekend']
+    for tag in hashtags:
+        try:
+            url = f'https://www.instagram.com/explore/tags/{tag}/'
+            r = safe_request(url)
+            if not r:
+                continue
+            soup = BeautifulSoup(r.text, 'html.parser')
+            meta = soup.find('meta', attrs={'name': 'description'})
+            if meta and meta.get('content'):
+                txt = meta['content']
+                if len(txt) > 30:
+                    rid = insert_raw(cur, f'instagram:#{tag}', url, txt, 'instagram',
+                                   hashtags=f'#{tag}', location='nashik')
+                    if rid:
+                        count += 1
+            conn.commit()
+            time.sleep(2)
+        except Exception as e:
+            log.warning(f'Instagram #{tag} error: {e}')
+            conn.rollback()
+    log.info(f'Instagram: {count} signals')
+    return count
+
+# --- FACEBOOK COLLECTOR ---
+def collect_facebook(conn):
+    """Collect Facebook posts about Nashik wine tourism via web scraping."""
+    count = 0
+    cur = conn.cursor()
+    pages = ['nashikwineclub', 'sulavineyards', 'yorkwinery', 'nashiktourism',
+             'maharashtratourism', 'groverzampawines']
+    for page in pages:
+        try:
+            url = f'https://www.facebook.com/{page}/'
+            r = safe_request(url)
+            if not r:
+                continue
+            soup = BeautifulSoup(r.text, 'html.parser')
+            meta = soup.find('meta', attrs={'name': 'description'})
+            if meta and meta.get('content'):
+                txt = meta['content']
+                if len(txt) > 30:
+                    rid = insert_raw(cur, f'facebook:{page}', url, txt, 'facebook',
+                                   author=page, location='nashik')
+                    if rid:
+                        count += 1
+            conn.commit()
+            time.sleep(2)
+        except Exception as e:
+            log.warning(f'Facebook {page} error: {e}')
+            conn.rollback()
+    log.info(f'Facebook: {count} signals')
+    return count
 # --- INSIGHTS GENERATION ---
 def generate_insights(conn, total_raw, total_stored, total_leads, platform_data):
     try:
@@ -356,6 +416,8 @@ def run_cycle():
         ('google_trends', collect_trends),
         ('twitter', collect_twitter),
         ('quora', collect_quora),
+                                ('instagram', collect_instagram),
+            ('facebook', collect_facebook),
     ]
     
     for name, func in collectors:
@@ -383,7 +445,7 @@ def run_cycle():
 
 # --- DAEMON ---
 def main():
-    log.info('VayaVia Collector v3.2 starting as daemon...')
+    log.info('VayaVia Collector v3.3 starting as daemon...')
     while True:
         try:
             run_cycle()
